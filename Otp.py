@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 from pyrogram import Client, filters
-from pyrogram.types import Message, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.types import Message, ReplyKeyboardMarkup
 
 API_ID = 25024171  # Replace with your API ID
 API_HASH = "7e709c0f5a2b8ed7d5f90a48219cffd3"
@@ -20,7 +20,7 @@ async def start_command(_, message: Message):
             ["📊 Balance", "📞 Get Number"],
             ["📬 Get Code", "🔄 Change Status"],
             ["💸 Prices", "🧾 Services"],
-            ["🌎 Countries", "📦 Availability"]
+            ["🌍 Countries", "📦 Availability"]
         ],
         resize_keyboard=True
     )
@@ -43,10 +43,9 @@ async def get_services(_, message: Message):
         async with session.get(url) as resp:
             text = await resp.text()
 
-    # Convert to dict
     try:
         services = dict(line.split(":") for line in text.strip().split("\n"))
-    except Exception as e:
+    except Exception:
         return await message.reply(f"⚠️ Error parsing response:\n{text}")
 
     result = "🧾 Available Services:\n\n"
@@ -57,16 +56,15 @@ async def get_services(_, message: Message):
 # ========== GET COUNTRIES ==========
 @app.on_message(filters.regex("(?i)^🌍 Countries$"))
 async def get_countries(_, message: Message):
-    url = f"https://api.tiger-sms.com/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getCountries"
+    url = f"{API_BASE}&action=getCountries"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             text = await resp.text()
 
     try:
         countries = dict(line.split(":") for line in text.strip().split("\n"))
-    except Exception as e:
-        await message.reply(f"❌ Could not parse response:\n{text}")
-        return
+    except Exception:
+        return await message.reply(f"❌ Could not parse response:\n{text}")
 
     result = "🌍 Available Countries:\n\n"
     for code, name in countries.items():
@@ -74,14 +72,17 @@ async def get_countries(_, message: Message):
 
     await message.reply(result)
 
-
 # ========== PRICES ==========
 @app.on_message(filters.regex("(?i)^💸 Prices$"))
 async def get_prices(_, message: Message):
     url = f"{API_BASE}&action=getPrices"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
-            prices = await resp.json()
+            try:
+                prices = await resp.json()
+            except Exception:
+                return await message.reply("❌ Could not fetch prices: Unexpected response format.")
+
     result = "💸 Prices:\n\n"
     for country, data in prices.items():
         result += f"🌍 Country {country}:\n"
@@ -96,7 +97,7 @@ async def get_prices(_, message: Message):
 async def get_number(_, message: Message):
     await message.reply("Send service code (e.g., *tg* for Telegram):")
 
-    @app.on_message(filters.text)
+    @app.on_message(filters.text & ~filters.command)
     async def service_input(_, msg: Message):
         service = msg.text.lower()
         url = f"{API_BASE}&action=getNumber&service={service}&country=0"
@@ -110,7 +111,7 @@ async def get_number(_, message: Message):
 async def get_code(_, message: Message):
     await message.reply("Send activation ID:")
 
-    @app.on_message(filters.text)
+    @app.on_message(filters.text & ~filters.command)
     async def code_input(_, msg: Message):
         activation_id = msg.text.strip()
         url = f"{API_BASE}&action=getStatus&id={activation_id}"
@@ -124,7 +125,7 @@ async def get_code(_, message: Message):
 async def change_status(_, message: Message):
     await message.reply("Send ID and Status like: `123456 6`\n\nStatus:\n- 1: Ready\n- 3: Cancel\n- 6: Complete")
 
-    @app.on_message(filters.text)
+    @app.on_message(filters.text & ~filters.command)
     async def status_input(_, msg: Message):
         parts = msg.text.strip().split()
         if len(parts) != 2:
@@ -144,28 +145,26 @@ async def get_availability(_, message: Message):
         async with session.get(url) as resp:
             stats_text = await resp.text()
 
-# Split by newline if multiple countries are listed
-lines = stats_text.strip().splitlines()
+    lines = stats_text.strip().splitlines()
 
-for line in lines:
-    parts = line.split(":")
-    country = parts[0]
-    providers = parts[1:]
+    for line in lines:
+        parts = line.split(":")
+        country = parts[0]
+        providers = parts[1:]
 
-    response = f"📍 *{country}*\n"
+        response = f"📍 *{country}*\n"
 
-    for i in range(0, len(providers), 2):
-        try:
-            provider_name = providers[i]
-            count = providers[i + 1]
-            response += f"  ┗ 📦 *{provider_name}*: `{count}`\n"
-        except IndexError:
-            continue
+        for i in range(0, len(providers), 2):
+            try:
+                provider_name = providers[i]
+                count = providers[i + 1]
+                response += f"  ┗ 📦 *{provider_name}*: `{count}`\n"
+            except IndexError:
+                continue
 
-    await message.reply(response, parse_mode="markdown")
+        await message.reply(response, parse_mode="markdown")
 
 # ========== MAIN ==========
 if __name__ == "__main__":
     print("🚀 Starting Tiger OTP Bot...")
     app.run()
-              
