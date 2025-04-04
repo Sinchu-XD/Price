@@ -16,10 +16,10 @@ if not os.path.exists("venv"):
 logging.basicConfig(level=logging.INFO)
 
 # === CONFIG ===
-API_ID = 123456  # Replace with your Telegram API ID
-API_HASH = "your_api_hash"  # Replace with your Telegram API HASH
-BOT_TOKEN = "your_bot_token"  # Replace with your Telegram Bot Token
-SMS_API_KEY = "your_sms_activate_api_key"  # Replace with your SMS-Activate API Key
+API_ID = 25024171
+API_HASH = "7e709c0f5a2b8ed7d5f90a48219cffd3"
+BOT_TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"
+SMS_API_KEY = "bdf4bff721f95c820f40c6A3d8076f45"
 
 RUB_TO_USD = 0.011
 RUB_TO_INR = 0.83
