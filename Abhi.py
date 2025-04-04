@@ -6,6 +6,13 @@ import os
 from pyrogram import Client, filters
 from pyrogram.types import Message, ReplyKeyboardMarkup
 
+
+if not os.path.exists("venv"):
+     print("📦 Setting up virtual environment...")
+     os.system("python3 -m venv venv")
+     os.system("source venv/bin/activate && pip install pyrogram tgcrypto aiohttp")
+
+
 # Enable logging
 logging.basicConfig(level=logging.INFO)
 
@@ -81,10 +88,6 @@ async def fetch_prices(_, message: Message):
 # ============== MAIN ==============
 if __name__ == "__main__":
     # Setup virtual environment & install dependencies (if needed)
-    if not os.path.exists("venv"):
-        print("📦 Setting up virtual environment...")
-        os.system("python3 -m venv venv")
-        os.system("source venv/bin/activate && pip install pyrogram tgcrypto aiohttp")
-
+    
     print("🚀 Bot is starting...")
     app.run()
