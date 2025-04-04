@@ -28,6 +28,10 @@ TARGET_SERVICES = {
     "WhatsApp": "wa"
 }
 
+# Currency conversion rates (Fixed for simplicity)
+RUB_TO_USD = 0.011
+RUB_TO_INR = 0.91
+
 # ================ BOT SETUP =================
 app = Client(
     "otp_price_bot",
@@ -69,13 +73,15 @@ async def fetch_prices(_, message: Message):
                     await message.reply("❌ Failed to decode response from SMS-Activate API.")
                     return
 
-        result = f"💰 {service_name} OTP Prices:\n\n"
+        result = f"💰 {service_name} OTP Prices (converted):\n\n"
         for country_code, services in data.items():
             if service_key in services:
-                cost = services[service_key].get("cost", "N/A")
+                cost = services[service_key].get("cost", 0)
                 count = services[service_key].get("count", 0)
                 if count > 0:
-                    result += f"🌍 Country {country_code}: {cost}₽ | Available: {count}\n"
+                    usd = round(cost * RUB_TO_USD, 3)
+                    inr = round(cost * RUB_TO_INR, 2)
+                    result += f"🌍 {country_code}: {cost}₽ | ${usd} | ₹{inr} | Available: {count}\n"
 
         if len(result) > 4096:
             result = result[:4090] + "..."
@@ -87,7 +93,5 @@ async def fetch_prices(_, message: Message):
 
 # ============== MAIN ==============
 if __name__ == "__main__":
-    # Setup virtual environment & install dependencies (if needed)
-    
     print("🚀 Bot is starting...")
     app.run()
