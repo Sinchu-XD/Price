@@ -1,31 +1,36 @@
 import asyncio
+import json
 import aiohttp
 import logging
 import os
-import json
 from pyrogram import Client, filters
 from pyrogram.types import Message, ReplyKeyboardMarkup
 
-# Setup virtual environment (only if running standalone)
+# ✅ Setup Virtual Environment and install dependencies
+if not os.path.exists("venv"):
+    print("📦 Setting up virtual environment...")
+    os.system("python3 -m venv venv")
+    os.system("source venv/bin/activate && pip install pyrogram tgcrypto aiohttp")
+
+# ✅ Logging
 logging.basicConfig(level=logging.INFO)
 
-# ================= CONFIG =================
-API_ID = 25024171  # ⚠️ Your API ID
-API_HASH = "7e709c0f5a2b8ed7d5f90a48219cffd3"  # ⚠️ Your API Hash
-BOT_TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"  # ⚠️ Your Bot Token
-SMS_API_KEY = "bdf4bff721f95c820f40c6A3d8076f45"  # ⚠️ Your SMS-Activate API Key
+# ========== CONFIG ==========
+API_ID = 25024171
+API_HASH = "7e709c0f5a2b8ed7d5f90a48219cffd3"
+BOT_TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"
+SMS_API_KEY = "bdf4bff721f95c820f40c6A3d8076f45"
 
-# Target services (You can expand this dictionary)
 TARGET_SERVICES = {
     "Telegram": "tg",
     "WhatsApp": "wa"
 }
 
-# Currency conversion rates (Fixed for simplicity)
+# ✅ Currency conversion rates (update if needed)
 RUB_TO_USD = 0.011
-RUB_TO_INR = 0.91
+RUB_TO_INR = 0.83
 
-# ================ BOT SETUP =================
+# ✅ Pyrogram client
 app = Client(
     "otp_price_bot",
     api_id=API_ID,
@@ -33,58 +38,64 @@ app = Client(
     bot_token=BOT_TOKEN
 )
 
-# ============== START COMMAND ==============
+# ========== /start command ==========
 @app.on_message(filters.command("start"))
 async def start_cmd(_, message: Message):
     keyboard = ReplyKeyboardMarkup(
-@@ -53,35 +51,41 @@ async def start_cmd(_, message: Message):
+        [["Telegram", "WhatsApp"]],
+        resize_keyboard=True,
+        one_time_keyboard=True
+    )
+    await message.reply_text(
+        "👋 Welcome to the SMS-Activate OTP Bot!\nChoose a service below to check OTP prices:",
         reply_markup=keyboard
     )
 
-# ========== SERVICE PRICE FETCHER ==========
+# ========== Price Fetcher ==========
 @app.on_message(filters.text & filters.regex("^(Telegram|WhatsApp)$"))
 async def fetch_prices(_, message: Message):
     service_name = message.text
     service_key = TARGET_SERVICES.get(service_name)
+    await message.reply("⏳ Fetching prices and countries...")
 
-
-    await message.reply("⏳ Fetching prices...")
-
-    url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getPrices"
+    prices_url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getPrices"
+    countries_url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getCountries"
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                text_data = await resp.text()
-                try:
-                    data = json.loads(text_data)
-                except json.JSONDecodeError:
-                    await message.reply("❌ Failed to decode response from SMS-Activate API.")
-                    return
+            # Fetch prices
+            async with session.get(prices_url) as r1:
+                prices_data = json.loads(await r1.text())
 
-        result = f"💰 {service_name} OTP Prices (converted):\n\n"
-        for country_code, services in data.items():
+            # Fetch country names
+            async with session.get(countries_url) as r2:
+                countries_data = json.loads(await r2.text())
+
+        result = f"📲 {service_name} OTP Prices:\n\n"
+        for country_code, services in prices_data.items():
             if service_key in services:
-                cost = services[service_key].get("cost", 0)
+                cost_rub = services[service_key].get("cost", 0)
                 count = services[service_key].get("count", 0)
 
                 if count > 0:
-                    usd = round(cost * RUB_TO_USD, 3)
-                    inr = round(cost * RUB_TO_INR, 2)
-                    result += f"🌍 {country_code}: {cost}₽ | ${usd} | ₹{inr} | Available: {count}\n"
+                    country_info = countries_data.get(country_code, {})
+                    country_name = country_info.get("eng", f"Country {country_code}")
+                    emoji = country_info.get("emoji", "🌍")
 
+                    price_usd = round(cost_rub * RUB_TO_USD, 2)
+                    price_inr = round(cost_rub * RUB_TO_INR, 2)
 
-
-
-
+                    result += f"{emoji} {country_name}: ${price_usd} | ₹{price_inr} | Available: {count}\n"
 
         if len(result) > 4096:
             result = result[:4090] + "..."
-@@ -91,7 +95,7 @@ async def fetch_prices(_, message: Message):
+
+        await message.reply(result)
+
     except Exception as e:
         await message.reply(f"⚠️ Error: {e}")
 
-# ============== MAIN ==============
+# ========== Run Bot ==========
 if __name__ == "__main__":
     print("🚀 Bot is starting...")
     app.run()
