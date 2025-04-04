@@ -23,7 +23,7 @@ TARGET_SERVICES = {
 
 # ================ BOT SETUP =================
 app = Client(
-    "SMSActivateOTPBot",
+    "otp_price_bot",
     api_id=API_ID,
     api_hash=API_HASH,
     bot_token=BOT_TOKEN
