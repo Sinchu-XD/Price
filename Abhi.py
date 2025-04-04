@@ -45,8 +45,9 @@ async def fetch_prices(_, message: Message):
 
     await message.reply("⏳ Fetching full price list...")
 
-    prices_url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getPrices"
-    countries_url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getCountries"
+    prices_url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getPrices&format=json"
+    countries_url = f"https://api.sms-activate.org/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getCountries&format=json"
+
 
     try:
         async with aiohttp.ClientSession() as session:
