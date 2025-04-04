@@ -41,7 +41,14 @@ async def get_services(_, message: Message):
     url = f"{API_BASE}&action=getServices"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
-            services = await resp.json()
+            text = await resp.text()
+
+    # Convert to dict
+    try:
+        services = dict(line.split(":") for line in text.strip().split("\n"))
+    except Exception as e:
+        return await message.reply(f"⚠️ Error parsing response:\n{text}")
+
     result = "🧾 Available Services:\n\n"
     for code, name in services.items():
         result += f"{code} - {name}\n"
