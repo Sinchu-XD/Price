@@ -55,16 +55,25 @@ async def get_services(_, message: Message):
     await message.reply(result)
 
 # ========== GET COUNTRIES ==========
-@app.on_message(filters.regex("(?i)^🌎 Countries$"))
+@app.on_message(filters.regex("(?i)^🌍 Countries$"))
 async def get_countries(_, message: Message):
-    url = f"{API_BASE}&action=getCountries"
+    url = f"https://api.tiger-sms.com/stubs/handler_api.php?api_key={SMS_API_KEY}&action=getCountries"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
-            countries = await resp.json()
-    result = "🌍 Countries:\n\n"
+            text = await resp.text()
+
+    try:
+        countries = dict(line.split(":") for line in text.strip().split("\n"))
+    except Exception as e:
+        await message.reply(f"❌ Could not parse response:\n{text}")
+        return
+
+    result = "🌍 Available Countries:\n\n"
     for code, name in countries.items():
         result += f"{code} - {name}\n"
+
     await message.reply(result)
+
 
 # ========== PRICES ==========
 @app.on_message(filters.regex("(?i)^💸 Prices$"))
@@ -133,7 +142,7 @@ async def get_availability(_, message: Message):
     url = f"{API_BASE}&action=getNumbersStatus"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
-            stats = await resp.json()
+            stats = await resp.text()
     result = "📦 Number Availability:\n\n"
     for country_code, providers in stats.items():
         result += f"🌍 Country {country_code}:\n"
