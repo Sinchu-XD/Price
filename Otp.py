@@ -142,13 +142,27 @@ async def get_availability(_, message: Message):
     url = f"{API_BASE}&action=getNumbersStatus"
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
-            stats = await resp.text()
-    result = "📦 Number Availability:\n\n"
-    for country_code, providers in stats.items():
-        result += f"🌍 Country {country_code}:\n"
-        for provider, count in providers.items():
-            result += f"  📡 {provider} → {count}\n"
-    await message.reply(result[:4090] + "..." if len(result) > 4090 else result)
+            stats_text = await resp.text()
+
+# Split by newline if multiple countries are listed
+lines = stats_text.strip().splitlines()
+
+for line in lines:
+    parts = line.split(":")
+    country = parts[0]
+    providers = parts[1:]
+
+    response = f"📍 *{country}*\n"
+
+    for i in range(0, len(providers), 2):
+        try:
+            provider_name = providers[i]
+            count = providers[i + 1]
+            response += f"  ┗ 📦 *{provider_name}*: `{count}`\n"
+        except IndexError:
+            continue
+
+    await message.reply(response, parse_mode="markdown")
 
 # ========== MAIN ==========
 if __name__ == "__main__":
