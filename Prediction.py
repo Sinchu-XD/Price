@@ -10,70 +10,62 @@ TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"
 
 bot = TelegramClient("wingoo_5min", API_ID, API_HASH).start(bot_token=TOKEN)
 
-headers = {
-    "Accept": "application/json, text/plain, */*",
-    "Content-Type": "application/json;charset=UTF-8",
-    "Origin": "https://dmwin1.com",
-    "Referer": "https://dmwin1.com",
-    "User-Agent": "Mozilla/5.0"
-}
-
 predictionss = []
 old = []
 preds = False
 CHAT_ID = None
 
-def predictions():
+def fetch_results():
     try:
         json_data = {
             'pageSize': 10,
             'pageNo': 1,
-            'typeId': 2,  # Wingo 5MIN
+            'typeId': 2,
             'language': 0,
-            'random': secrets.token_hex(16),  # Valid 32-character string
+            'random': secrets.token_hex(16),
             'signature': 'sig456',
             'timestamp': time.time()
         }
-
-        response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
+        response = requests.post(
+            'https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList',
+            json=json_data
+        )
         data = response.json()
-
-        if "data" not in data:
+        if "data" not in data or "list" not in data["data"]:
             print(f"❌ API Response Missing 'data'\nRAW RESPONSE: {response.text}")
             return None
+        return data["data"]["list"]
+    except Exception as e:
+        print("❌ Fetch Error:", e)
+        return None
 
-        game = data['data']['list']
-        pd = int(game[0]['issueNumber'])
-        period_id = pd + 1
-        number = int(game[0]['number'])
+def predictions():
+    try:
+        results = fetch_results()
+        if not results:
+            return None
 
-        play = 'SMALL' if number <= 6 else 'BIG'
-        return f"Play- {period_id}: {play}"
+        last_10 = results[:10]
+        big = sum(1 for res in last_10 if int(res["number"]) > 6)
+        small = 10 - big
+        size = "BIG" if big < small else "SMALL"
 
+        period_id = int(results[0]['issueNumber'])
+        return f"Play- {period_id}: {size}"
     except Exception as e:
         print("Prediction Error:", e)
         return None
 
 def checkerPrediction():
     try:
-        json_data = {
-            'pageSize': 10,
-            'pageNo': 1,
-            'typeId': 2,  # Wingo 5MIN
-            'language': 0,
-            'random': secrets.token_hex(16),
-            'signature': 'sig456',
-            'timestamp': time.time()
-        }
-
-        response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
-        game = response.json()['data']['list']
-        number = int(game[1]['number'])
-
+        results = fetch_results()
+        if not results:
+            return "N/A"
+        number = int(results[1]['number'])
         return 'BIG' if number > 6 else 'SMALL'
     except Exception as e:
         print("Checker Error:", e)
-        return None
+        return "N/A"
 
 @bot.on(events.NewMessage(pattern=r"/start\s*(-?\d+)"))
 async def start_prediction(e):
@@ -100,7 +92,7 @@ async def start_prediction(e):
 
                 if int(period_id) not in predictionss:
                     last = checkerPrediction()
-                    predictionss.pop(0)
+                    predictionss.clear()
                     predictionss.append(int(period_id))
 
                     message = (
