@@ -22,31 +22,32 @@ old = []
 preds = False
 
 def predictions():
-    red_count = 0
-    green_count = 0
     try:
         json_data = {
             'pageSize': 10,
             'pageNo': 1,
-            'typeId': 2,  # ✅ Wingo 5MIN Type ID
+            'typeId': 2,  # Wingo 5MIN
             'language': 0,
             'random': 'rand123',
             'signature': 'sig456',
             'timestamp': time.time()
         }
         response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
-        game = response.json()['data']['list']
+        print("RAW RESPONSE:", response.text)  # 🐛 Debug print
+
+        data = response.json()
+        if "data" not in data:
+            print("❌ API Response Missing 'data'")
+            return None
+
+        game = data['data']['list']
         pd = int(game[0]['issueNumber'])
         period_id = pd + 1
         number = int(game[0]['number'])
 
-        if number > 6:
-            red_count += 3
-        else:
-            green_count += 9
-
-        play = 'SMALL' if red_count > green_count else 'BIG'
+        play = 'SMALL' if number <= 6 else 'BIG'
         return f"Play- {period_id}: {play}"
+
     except Exception as e:
         print("Prediction Error:", e)
         return None
