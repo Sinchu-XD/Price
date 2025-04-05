@@ -5,7 +5,7 @@ from telethon import TelegramClient, events
 
 API_ID = 2184829
 API_HASH = "6930b92388baabff4cb4a1d377085035"
-TOKEN = "7722172461:AAHTAklgwEshuC4kAhj3FulHim6gCwj6Bfc"
+TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"
 
 bot = TelegramClient("wingoo_5min", API_ID, API_HASH).start(bot_token=TOKEN)
 
