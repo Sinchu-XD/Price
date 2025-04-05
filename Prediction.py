@@ -1,6 +1,7 @@
 import re
 import time
 import requests
+import secrets
 from telethon import TelegramClient, events
 
 API_ID = 2184829
@@ -28,10 +29,11 @@ def predictions():
             'pageNo': 1,
             'typeId': 2,  # Wingo 5MIN
             'language': 0,
-            'random': 'rand123',
+            'random': secrets.token_hex(16),  # ✅ Generates valid 32-char string
             'signature': 'sig456',
             'timestamp': time.time()
-        }
+}
+
         response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
         print("RAW RESPONSE:", response.text)  # 🐛 Debug print
 
@@ -59,12 +61,13 @@ def checkerPrediction():
         json_data = {
             'pageSize': 10,
             'pageNo': 1,
-            'typeId': 2,  # ✅ Wingo 5MIN Type ID
+            'typeId': 2,  # Wingo 5MIN
             'language': 0,
-            'random': 'rand123',
+            'random': secrets.token_hex(16),  # ✅ Generates valid 32-char string
             'signature': 'sig456',
             'timestamp': time.time()
-        }
+}
+
         response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
         game = response.json()['data']['list']
         number = int(game[1]['number'])
