@@ -1,7 +1,7 @@
 import re
 import time
-import requests
 import secrets
+import requests
 from telethon import TelegramClient, events
 
 API_ID = 2184829
@@ -21,6 +21,7 @@ headers = {
 predictionss = []
 old = []
 preds = False
+CHAT_ID = None
 
 def predictions():
     try:
@@ -29,17 +30,16 @@ def predictions():
             'pageNo': 1,
             'typeId': 2,  # Wingo 5MIN
             'language': 0,
-            'random': secrets.token_hex(16),  # ✅ Generates valid 32-char string
+            'random': secrets.token_hex(16),  # Valid 32-character string
             'signature': 'sig456',
             'timestamp': time.time()
-}
+        }
 
         response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
-        print("RAW RESPONSE:", response.text)  # 🐛 Debug print
-
         data = response.json()
+
         if "data" not in data:
-            print("❌ API Response Missing 'data'")
+            print(f"❌ API Response Missing 'data'\nRAW RESPONSE: {response.text}")
             return None
 
         game = data['data']['list']
@@ -55,18 +55,16 @@ def predictions():
         return None
 
 def checkerPrediction():
-    red_count = 0
-    green_count = 0
     try:
         json_data = {
             'pageSize': 10,
             'pageNo': 1,
             'typeId': 2,  # Wingo 5MIN
             'language': 0,
-            'random': secrets.token_hex(16),  # ✅ Generates valid 32-char string
+            'random': secrets.token_hex(16),
             'signature': 'sig456',
             'timestamp': time.time()
-}
+        }
 
         response = requests.post('https://api.fastpay92.com/api/webapi/GetNoaverageEmerdList', json=json_data)
         game = response.json()['data']['list']
@@ -77,47 +75,53 @@ def checkerPrediction():
         print("Checker Error:", e)
         return None
 
-@bot.on(events.NewMessage(pattern="/start"))
+@bot.on(events.NewMessage(pattern=r"/start\s*(-?\d+)"))
 async def start_prediction(e):
-    global preds
-    preds = True
-    await e.reply("🔮 Starting Wingo 5MIN Predictions...")
+    global preds, CHAT_ID
+    try:
+        CHAT_ID = int(e.pattern_match.group(1))
+        chat_entity = await bot.get_entity(CHAT_ID)
+        chat_name = chat_entity.title if hasattr(chat_entity, "title") else chat_entity.username or str(CHAT_ID)
 
-    while preds:
-        try:
-            data = predictions()
-            if not data:
-                continue
-            matchp = re.search(r'Play-\s(\d+):', data)
-            period_id = matchp.group(1)
-            size = data.split(": ")[1]
+        preds = True
+        await e.reply(f"🔮 Starting Wingo 5MIN Predictions in **{chat_name}**...")
 
-            if len(predictionss) == 0:
-                predictionss.append(int(period_id))
+        while preds:
+            try:
+                data = predictions()
+                if not data:
+                    continue
+                matchp = re.search(r'Play-\s(\d+):', data)
+                period_id = matchp.group(1)
+                size = data.split(": ")[1]
 
-            if int(period_id) not in predictionss:
-                last = checkerPrediction()
-                predictionss.pop(0)
-                predictionss.append(int(period_id))
+                if len(predictionss) == 0:
+                    predictionss.append(int(period_id))
 
-                message = (
-                    f"🎯 **WINGO 5MIN PREDICTION** 🎯\n\n"
-                    f"**🆔 PERIOD ID:** `{period_id}`\n"
-                    f"**📊 PREDICTION:** `{size}`\n"
-                    f"**🧠 LAST RESULT:** `{last}`\n"
-                    f"**💰 TIP:** Maintain fund upto Level 5"
-                )
+                if int(period_id) not in predictionss:
+                    last = checkerPrediction()
+                    predictionss.pop(0)
+                    predictionss.append(int(period_id))
 
-                print(message)
-                oldMessage = await bot.send_file(
-                    e.chat_id,
-                    file="https://files.catbox.moe/6hq5j7.jpg",
-                    caption=message
-                )
-                old.append(oldMessage)
-            time.sleep(2)
-        except Exception as err:
-            print("Loop Error:", err)
+                    message = (
+                        f"🎯 **WINGO 5MIN PREDICTION** 🎯\n\n"
+                        f"**🆔 PERIOD ID:** `{period_id}`\n"
+                        f"**📊 PREDICTION:** `{size}`\n"
+                        f"**🧠 LAST RESULT:** `{last}`\n"
+                        f"**💰 TIP:** Maintain fund upto Level 5"
+                    )
+
+                    print(message)
+                    await bot.send_file(
+                        CHAT_ID,
+                        file="https://files.catbox.moe/6hq5j7.jpg",
+                        caption=message
+                    )
+                time.sleep(2)
+            except Exception as err:
+                print("Loop Error:", err)
+    except Exception as err:
+        await e.reply(f"❌ Error: {err}")
 
 @bot.on(events.NewMessage(pattern="/stop"))
 async def stop_prediction(e):
