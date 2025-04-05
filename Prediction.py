@@ -73,7 +73,7 @@ def checkerPrediction():
         print("Checker Error:", e)
         return None
 
-@bot.on(events.NewMessage(pattern="/wingo5start"))
+@bot.on(events.NewMessage(pattern="/start"))
 async def start_prediction(e):
     global preds
     preds = True
@@ -115,7 +115,7 @@ async def start_prediction(e):
         except Exception as err:
             print("Loop Error:", err)
 
-@bot.on(events.NewMessage(pattern="/wingo5stop"))
+@bot.on(events.NewMessage(pattern="/stop"))
 async def stop_prediction(e):
     global preds
     preds = False
