@@ -7,7 +7,7 @@ API_ID = 2184829
 API_HASH = "6930b92388baabff4cb4a1d377085035"
 TOKEN = "7722172461:AAHTAklgwEshuC4kAhj3FulHim6gCwj6Bfc"
 
-bot = TelegramClient("winggoo", API_ID, API_HASH).start(bot_token=TOKEN)
+bot = TelegramClient("wingoo_5min", API_ID, API_HASH).start(bot_token=TOKEN)
 
 headers = {
     "Accept": "application/json, text/plain, */*",
@@ -28,7 +28,7 @@ def predictions():
         json_data = {
             'pageSize': 10,
             'pageNo': 1,
-            'typeId': 1,
+            'typeId': 2,  # ✅ Wingo 5MIN Type ID
             'language': 0,
             'random': 'rand123',
             'signature': 'sig456',
@@ -45,11 +45,7 @@ def predictions():
         else:
             green_count += 9
 
-        if red_count > green_count:
-            play = 'SMALL'
-        else:
-            play = 'BIG'
-
+        play = 'SMALL' if red_count > green_count else 'BIG'
         return f"Play- {period_id}: {play}"
     except Exception as e:
         print("Prediction Error:", e)
@@ -62,7 +58,7 @@ def checkerPrediction():
         json_data = {
             'pageSize': 10,
             'pageNo': 1,
-            'typeId': 1,
+            'typeId': 2,  # ✅ Wingo 5MIN Type ID
             'language': 0,
             'random': 'rand123',
             'signature': 'sig456',
@@ -72,22 +68,17 @@ def checkerPrediction():
         game = response.json()['data']['list']
         number = int(game[1]['number'])
 
-        if number > 6:
-            red_count += 3
-        else:
-            green_count += 9
-
-        return 'BIG' if red_count > green_count else 'SMALL'
+        return 'BIG' if number > 6 else 'SMALL'
     except Exception as e:
         print("Checker Error:", e)
         return None
 
-@bot.on(events.NewMessage(pattern="/tcstart"))
+@bot.on(events.NewMessage(pattern="/wingo5start"))
 async def start_prediction(e):
     global preds
     preds = True
-    await e.reply("🔮 Starting TC Lottery Predictions...")
-    
+    await e.reply("🔮 Starting Wingo 5MIN Predictions...")
+
     while preds:
         try:
             data = predictions()
@@ -106,7 +97,7 @@ async def start_prediction(e):
                 predictionss.append(int(period_id))
 
                 message = (
-                    f"🎯 **WINGO 1MIN PREDICTION** 🎯\n\n"
+                    f"🎯 **WINGO 5MIN PREDICTION** 🎯\n\n"
                     f"**🆔 PERIOD ID:** `{period_id}`\n"
                     f"**📊 PREDICTION:** `{size}`\n"
                     f"**🧠 LAST RESULT:** `{last}`\n"
@@ -114,18 +105,21 @@ async def start_prediction(e):
                 )
 
                 print(message)
-                oldMessage = await bot.send_file(e.chat_id, file="https://files.catbox.moe/6hq5j7.jpg", caption=message)
+                oldMessage = await bot.send_file(
+                    e.chat_id,
+                    file="https://files.catbox.moe/6hq5j7.jpg",
+                    caption=message
+                )
                 old.append(oldMessage)
             time.sleep(2)
         except Exception as err:
             print("Loop Error:", err)
 
-@bot.on(events.NewMessage(pattern="/tcstop"))
+@bot.on(events.NewMessage(pattern="/wingo5stop"))
 async def stop_prediction(e):
     global preds
     preds = False
-    await e.reply("🛑 Stopped TC Lottery Predictions.")
+    await e.reply("🛑 Stopped Wingo 5MIN Predictions.")
 
-print("✅ TC Prediction Bot Running!")
+print("✅ Wingo 5MIN Prediction Bot Running!")
 bot.run_until_disconnected()
-                                        
