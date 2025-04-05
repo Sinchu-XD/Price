@@ -108,7 +108,9 @@ async def start_prediction(e):
                         f"**🆔 PERIOD ID:** `{period_id}`\n"
                         f"**📊 PREDICTION:** `{size}`\n"
                         f"**🧠 LAST RESULT:** `{last}`\n"
-                        f"**💰 TIP:** Maintain fund upto Level 5"
+                        f"**💰 TIP:** Maintain fund upto Level 5\n\n"
+                        f"** If You Want SureShot Prediction Then**"
+                        f"   **Contact**: @LookCyrus"
                     )
 
                     print(message)
