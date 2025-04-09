@@ -29,14 +29,15 @@ async def purge_all_messages(client: Client, message: Message):
 
     await message.reply(f"✅ Deleted {deleted} messages.")
 
-async def startup():
+@app.on_message(filters.command("start") & filters.private)
+async def start_cmd(client, message: Message):
     global BOT_USERNAME
-    async with app:
-        bot_user = await app.get_me()
-        BOT_USERNAME = f"@{bot_user.username}" if bot_user.username else bot_user.first_name
-        print(f"✅ Bot started as {BOT_USERNAME}")
+    me = await client.get_me()
+    BOT_USERNAME = f"@{me.username}" if me.username else me.first_name
+    print(f"✅ Bot started as {BOT_USERNAME}")
+    await message.reply(f"🤖 Hello! I am {BOT_USERNAME}. Use /purgeall in a group or channel.")
     
-    
+print(f"Bot Start as {BOT_USERNAME}")    
 app.run()
 
 
