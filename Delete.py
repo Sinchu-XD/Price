@@ -10,6 +10,7 @@ app = Client("DeleteAllBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOK
 
 # Replace with your Telegram user ID or list of SUDO users
 SUDO_USERS = [7862043458, 8091116698]  
+BOT_USERNAME = ""
 
 @app.on_message(filters.command("purgeall") & filters.user(SUDO_USERS))
 async def purge_all_messages(client: Client, message: Message):
@@ -27,5 +28,13 @@ async def purge_all_messages(client: Client, message: Message):
             continue
 
     await message.reply(f"✅ Deleted {deleted} messages.")
+
+@app.on_start()
+async def on_start(client: Client):
+    global BOT_USERNAME
+    bot_user = await client.get_me()
+    BOT_USERNAME = f"@{bot_user.username}" if bot_user.username else f"{bot_user.first_name}"
+    print(f"✅ Bot started as {BOT_USERNAME}")
+
 
 app.run()
