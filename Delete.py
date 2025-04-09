@@ -35,6 +35,8 @@ async def startup():
         bot_user = await app.get_me()
         BOT_USERNAME = f"@{bot_user.username}" if bot_user.username else bot_user.first_name
         print(f"✅ Bot started as {BOT_USERNAME}")
-    await app.run()
+    
+    
+app.run()
 
 
