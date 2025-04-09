@@ -29,12 +29,16 @@ async def purge_all_messages(client: Client, message: Message):
 
     await message.reply(f"✅ Deleted {deleted} messages.")
 
-@app.on_start()
-async def on_start(client: Client):
+async def startup():
     global BOT_USERNAME
-    bot_user = await client.get_me()
-    BOT_USERNAME = f"@{bot_user.username}" if bot_user.username else f"{bot_user.first_name}"
-    print(f"✅ Bot started as {BOT_USERNAME}")
+    async with app:
+        bot_user = await app.get_me()
+        BOT_USERNAME = f"@{bot_user.username}" if bot_user.username else bot_user.first_name
+        print(f"✅ Bot started as {BOT_USERNAME}")
+    await app.run()
 
 
-app.run()
+# 🔥 Launch the bot
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(startup())
