@@ -38,7 +38,3 @@ async def startup():
     await app.run()
 
 
-# 🔥 Launch the bot
-if __name__ == "__main__":
-    import asyncio
-    asyncio.run(startup())
