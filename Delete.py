@@ -9,7 +9,7 @@ BOT_TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"
 app = Client("DeleteAllBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 # Replace with your Telegram user ID or list of SUDO users
-SUDO_USERS = [123456789]  
+SUDO_USERS = [7862043458, 8091116698]  
 
 @app.on_message(filters.command("purgeall") & filters.user(SUDO_USERS))
 async def purge_all_messages(client: Client, message: Message):
