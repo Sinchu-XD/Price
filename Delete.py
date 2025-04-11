@@ -1,43 +1,25 @@
+import asyncio
 from pyrogram import Client, filters
 from pyrogram.types import Message
-import asyncio
 
-API_ID = 25024171
-API_HASH = "7e709c0f5a2b8ed7d5f90a48219cffd3"
-BOT_TOKEN = "7653924933:AAGQNauT14_MHCN1qdOu-KcqvvyKj7irSG0"
+API_ID = 6067591
+API_HASH = "94e17044c2393f43fda31d3afe77b26b"
+BOT_TOKEN = "7726535663:AAGalIgbZaBHRGhbAc0fdWmSithGcRjdEzg"
 
-app = Client("DeleteAllBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
+import logging
 
-# Replace with your Telegram user ID or list of SUDO users
-SUDO_USERS = [7862043458, 8091116698]  
-BOT_USERNAME = ""
+logging.basicConfig(level=logging.DEBUG)
 
-@app.on_message(filters.command("purgeall") & filters.user(SUDO_USERS))
-async def purge_all_messages(client: Client, message: Message):
-    chat_id = message.chat.id
-    await message.reply("🧹 Starting purge...")
+bot = Client("TesthBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-    deleted = 0
-    async for msg in client.get_chat_history(chat_id):
-        try:
-            await client.delete_messages(chat_id, msg.message_id)
-            deleted += 1
-            await asyncio.sleep(0.05)
-        except Exception as e:
-            print(f"Failed to delete {msg.message_id}: {e}")
-            continue
-
-    await message.reply(f"✅ Deleted {deleted} messages.")
-
-@app.on_message(filters.command("start") & filters.private)
+@bot.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message: Message):
-    global BOT_USERNAME
-    me = await client.get_me()
-    BOT_USERNAME = f"@{me.username}" if me.username else me.first_name
-    print(f"✅ Bot started as {BOT_USERNAME}")
-    await message.reply(f"🤖 Hello! I am {BOT_USERNAME}. Use /purgeall in a group or channel.")
-    
-print(f"Bot Start as {BOT_USERNAME}")    
-app.run()
+    await message.reply("✅ Bot is alive and working!")
 
+async def main():
+    await bot.start()
+    print("Bot is running...")
+    await asyncio.Event().wait()
 
+if __name__ == "__main__":
+    asyncio.run(main())
