@@ -4,7 +4,7 @@ from pyrogram.types import Message
 
 API_ID = 6067591
 API_HASH = "94e17044c2393f43fda31d3afe77b26b"
-BOT_TOKEN = "7726535663:AAGalIgbZaBHRGhbAc0fdWmSithGcRjdEzg"
+BOT_TOKEN = "8101654222:AAGyL2ScVLhYTrQJNWU8urw93DqcLRCe2iA"
 
 import logging
 
